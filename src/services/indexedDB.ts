@@ -1,6 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 
+import { getEmbeddingModel } from "./ai"
+
 const DB_NAME = "EmbeddingsDB"
 const STORE_NAME = "embeddings"
 
@@ -44,23 +46,20 @@ export async function getEmbeddings(
   const transaction = db.transaction(STORE_NAME, "readonly")
   const store = transaction.objectStore(STORE_NAME)
 
-  console.log("[getEmbeddings] url", url)
-
   return new Promise((resolve, reject) => {
     const request = store.get(url)
     request.onerror = () => reject(request.error)
     request.onsuccess = () => {
       if (request.result) {
         const { vectors } = request.result.vectorStore
-        // No llamamos a OpenAIEmbeddings aquí
-        const vectorStore = new MemoryVectorStore(
-          new OpenAIEmbeddings({
-            apiKey: process.env.PLASMO_PUBLIC_OPENAI_API_KEY,
-            model: "text-embedding-3-small"
-          })
-        )
-        vectorStore.memoryVectors = vectors
-        resolve(vectorStore)
+        getEmbeddingModel().then((config) => {
+          console.log("[getEmbeddings] openai", config)
+          const vectorStore = new MemoryVectorStore(
+            new OpenAIEmbeddings(config)
+          )
+          vectorStore.memoryVectors = vectors
+          resolve(vectorStore)
+        })
       } else {
         resolve(null)
       }

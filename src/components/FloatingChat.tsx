@@ -11,6 +11,7 @@ import { Button } from "~components/ui/button"
 import { Card, CardContent, CardHeader } from "~components/ui/card"
 import { Input } from "~components/ui/input"
 import { ScrollArea } from "~components/ui/scroll-area"
+import { defaultConfigValues } from "~popup"
 import { answerQuestion, extractContent } from "~services/ai"
 
 interface Message {
@@ -25,12 +26,9 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
   const [messages, setMessages] = useState<Message[]>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const lastMessageRef = useRef<HTMLDivElement>(null)
-  const [config] = useStorage("config", {
-    apiKey: "",
-    baseURL: "",
-    model: ""
-  })
+  const [config] = useStorage("config", defaultConfigValues)
   const [currentUrl, setCurrentUrl] = useState<string>("")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setCurrentUrl(window.location.href)
@@ -38,27 +36,29 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
 
   useEffect(() => {
     const loadExistingVectorStore = async () => {
-      if (currentUrl) {
+      if (currentUrl && !!config?.apiKey && !vectorStore) {
         setLoadingProcessDocument(true)
         try {
+          if (!!vectorStore) {
+            return
+          }
           const existingVectorStore = await extractContent()
           if (existingVectorStore) {
             setVectorStore(existingVectorStore)
-            console.log(
-              "[useEffect] Loaded existing vector store for:",
-              currentUrl
-            )
           }
         } catch (error) {
           console.error("Error loading existing vector store:", error)
+          setError(String(error))
         } finally {
           setLoadingProcessDocument(false)
         }
+      } else {
+        console.log("[useEffect] vectorStore already loaded")
       }
     }
 
     loadExistingVectorStore()
-  }, [currentUrl])
+  }, [currentUrl, config])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,6 +72,7 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
     }
 
     setLoadingResponse(true)
+    setError(null) // Limpiar error anterior
 
     try {
       setMessages((messages: any) => [
@@ -91,6 +92,7 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
       ;(e.target as HTMLFormElement).reset()
     } catch (error) {
       console.log("[handleSubmit] error", error)
+      setError(String(error))
     } finally {
       setLoadingResponse(false)
     }
@@ -126,7 +128,22 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
           <XCircleIcon className="h-4 w-4" />
         </Button>
       </CardHeader>
+      {!config?.apiKey && (
+        <div className="p-4 border-b border-gray-200">
+          <p className="text-sm text-gray-800">Error</p>
+          <p className="text-sm text-gray-800">
+            Please configure the OpenAI API key, base URL, and model in the
+            extension settings.
+          </p>
+        </div>
+      )}
       <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-800">
+            <p className="font-semibold mb-1 text-sm">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
         {messages.map((message, index) => (
           <div
             key={index}
@@ -163,7 +180,6 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
               autoComplete="off"
               disabled={
                 !config.apiKey ||
-                !config.baseURL ||
                 !config.model ||
                 loadingProcessDocument ||
                 loadingResponse

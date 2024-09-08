@@ -1,4 +1,6 @@
+//@ts-ignore
 import { StringOutputParser } from "@langchain/core/output_parsers"
+//@ts-ignore
 import { ChatPromptTemplate } from "@langchain/core/prompts"
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai"
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents"
@@ -7,7 +9,29 @@ import { pull } from "langchain/hub"
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 
+import { Storage } from "@plasmohq/storage"
+
+import type { Config } from "~popup"
+
+import defaultConfig from "./default-config"
 import { getEmbeddings, saveEmbeddings } from "./indexedDB"
+
+export async function getEmbeddingModel() {
+  const storage = new Storage()
+  const config = await storage.get<Config>("config")
+
+  return {
+    apiKey:
+      config?.embeddingApiKey ||
+      config?.apiKey ||
+      defaultConfig?.DEFAULT_EMBEDDING_API_KEY,
+    model: config?.embeddingModel || defaultConfig?.DEFAULT_EMBEDDING_MODEL,
+    configuration: {
+      baseURL:
+        config?.embeddingEndpoint || defaultConfig?.DEFAULT_EMBEDDING_ENDPOINT
+    }
+  }
+}
 
 export async function extractContent() {
   const url = window.location.href
@@ -42,11 +66,8 @@ export async function extractContent() {
   })
   const docs = await textSplitter.splitDocuments([doc])
 
-  console.log("[extractContent] calling openai embeddings")
-  const embeddings = new OpenAIEmbeddings({
-    apiKey: process.env.PLASMO_PUBLIC_OPENAI_API_KEY,
-    model: "text-embedding-3-small"
-  })
+  const embeddingModelConfig = await getEmbeddingModel()
+  const embeddings = new OpenAIEmbeddings(embeddingModelConfig)
 
   const newVectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings)
 
