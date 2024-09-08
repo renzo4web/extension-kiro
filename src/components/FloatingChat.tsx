@@ -1,124 +1,159 @@
-import React, { useEffect, useState } from "react"
+import { FileText, Loader2, Send, XCircleIcon } from "lucide-react"
 
 import "~style.css"
 
-import cssText from "data-text:~style.css"
+import type { MemoryVectorStore } from "langchain/vectorstores/memory"
+import { useEffect, useRef, useState } from "react"
 
-export const getStyle = () => {
-  const style = document.createElement("style")
-  style.textContent = cssText
-  return style
+import { useStorage } from "@plasmohq/storage/hook"
+
+import { Button } from "~components/ui/button"
+import { Card, CardContent, CardHeader } from "~components/ui/card"
+import { Input } from "~components/ui/input"
+import { ScrollArea } from "~components/ui/scroll-area"
+import { answerQuestion, extractContent } from "~services/ai"
+
+interface Message {
+  role: "user" | "assistant"
+  content: string
 }
 
-const FloatingChat: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<string[]>([])
-  const [input, setInput] = useState("")
-  const [isVisible, setIsVisible] = useState(false)
+export default function ChatUI({ handleClose }: { handleClose: () => void }) {
+  const [loadingResponse, setLoadingResponse] = useState(false)
+  const [loadingProcessDocument, setLoadingProcessDocument] = useState(false)
+  const [vectorStore, setVectorStore] = useState<MemoryVectorStore | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const lastMessageRef = useRef<HTMLDivElement>(null)
+  const [config] = useStorage("config", {
+    apiKey: "",
+    baseURL: "",
+    model: ""
+  })
 
-  const toggleChat = () => setIsOpen(!isOpen)
-
-  const extractContent = () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: "getPageContent" },
-        (response) => {
-          if (response && response.content) {
-            setMessages([
-              ...messages,
-              `Contenido extraído: ${response.content.substring(0, 100)}...`
-            ])
-          }
-        }
-      )
-    })
-  }
-
-  useEffect(() => {
-    // Escuchar mensajes del popup
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.action === "toggleVisibility") {
-        setIsVisible(request.isVisible)
-        sendResponse({ success: true })
-      }
-    })
-
-    // // Verificar el estado inicial
-    // chrome.storage.local.get(["chatVisible"], (result) => {
-    //   setIsVisible(result.chatVisible || false)
-    // })
-  }, [])
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (input.trim()) {
-      setMessages([...messages, `Usuario: ${input}`])
-      // Aquí irá la lógica para procesar la pregunta y obtener una respuesta
-      setInput("")
+    const question = (e.target as HTMLFormElement)?.question?.value || ""
+
+    if (!question || !vectorStore) {
+      console.log(
+        "[handleSubmit] question is empty or no vector store available"
+      )
+      return
+    }
+
+    setLoadingResponse(true)
+
+    try {
+      setMessages((messages: any) => [
+        ...messages,
+        { role: "user", content: question }
+      ])
+      console.log("[handleSubmit] config", config)
+      const answer = await answerQuestion(vectorStore, question, {
+        apiKey: config.apiKey,
+        baseURL: config.baseURL,
+        model: config.model
+      })
+      setMessages((messages: any) => [
+        ...messages,
+        { role: "assistant", content: answer }
+      ])
+      ;(e.target as HTMLFormElement).reset()
+    } catch (error) {
+      console.log("[handleSubmit] error", error)
+    } finally {
+      setLoadingResponse(false)
     }
   }
 
-  if (!isVisible) return null
+  const processDocument = async () => {
+    try {
+      setLoadingProcessDocument(true)
+      const newVectorStore = await extractContent()
+
+      setVectorStore(newVectorStore)
+    } catch (error) {
+      console.log("[processDocument] error", error)
+    } finally {
+      setLoadingProcessDocument(false)
+    }
+  }
+
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      setTimeout(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+    }
+  }, [messages])
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 plasmo-bg-red-500 p-5">
-      {isOpen ? (
-        <div className="w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col">
-          <button
-            onClick={toggleChat}
-            className="self-end p-2 text-gray-500 hover:text-gray-700">
-            X
-          </button>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {messages.map((message: any, index: number) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg ${
-                  message.role === "user"
-                    ? "bg-blue-100 text-right"
-                    : "bg-green-100"
-                }`}>
-                <p className="font-bold mb-1">
-                  {message.role === "user" ? "You" : "Assistant"}
-                </p>
-                <p>{message.content}</p>
-              </div>
-            ))}
+    <Card className="flex flex-col h-full">
+      <CardHeader className="p-4 border-b border-gray-200 flex   flex-row items-center justify-between">
+        <h2 className="text-md text-left self-end font-semibold  text-gray-800">
+          AI Assistant
+        </h2>
+        <Button variant="outline" size="icon" onClick={handleClose}>
+          <XCircleIcon className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            ref={index === messages.length - 1 ? lastMessageRef : null}
+            className={`mb-4 p-3 rounded-lg ${
+              message.role === "user" ? "bg-gray-100 ml-8" : "bg-blue-100 mr-8"
+            }`}>
+            <p className="font-semibold mb-1 text-sm text-gray-700">
+              {message.role === "user" ? "You" : "Assistant"}
+            </p>
+            <p className="text-sm text-gray-800">{message.content}</p>
           </div>
-          <form
-            onSubmit={handleSubmit}
-            className="p-4 border-t border-gray-200">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Haz una pregunta..."
-                className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Enviar
-              </button>
-            </div>
+        ))}
+      </ScrollArea>
+      <CardContent className="p-4 border-t border-gray-200">
+        <Button
+          onClick={processDocument}
+          className="w-full mb-4 bg-gray-100 text-gray-800 hover:bg-gray-200"
+          disabled={loadingProcessDocument}>
+          {loadingProcessDocument ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <FileText className="mr-2 h-4 w-4" />
+          )}
+          {loadingProcessDocument ? "Processing..." : "Process Page"}
+        </Button>
+        <div className="flex ">
+          <form onSubmit={handleSubmit} className="flex w-full space-x-2">
+            <Input
+              type="text"
+              placeholder="Ask a question..."
+              name="question"
+              className="flex-grow bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring focus:ring-gray-200 focus:ring-opacity-50"
+              autoComplete="off"
+              disabled={
+                !config.apiKey ||
+                !config.baseURL ||
+                !config.model ||
+                loadingProcessDocument ||
+                loadingResponse
+              }
+            />
+            <Button
+              type="submit"
+              className="bg-gray-800 text-white hover:bg-gray-700"
+              disabled={loadingResponse}>
+              {loadingResponse ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
           </form>
-          <button
-            onClick={extractContent}
-            className="m-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-            Extraer contenido
-          </button>
         </div>
-      ) : (
-        <button
-          onClick={toggleChat}
-          className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          Abrir Chat
-        </button>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   )
 }
-
-export default FloatingChat
