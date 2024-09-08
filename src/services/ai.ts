@@ -1,13 +1,23 @@
 import { StringOutputParser } from "@langchain/core/output_parsers"
 import { ChatPromptTemplate } from "@langchain/core/prompts"
-import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai"
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai"
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents"
 import { Document } from "langchain/document"
 import { pull } from "langchain/hub"
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 
+import { getEmbeddings, saveEmbeddings } from "./indexedDB"
+
 export async function extractContent() {
+  const url = window.location.href
+  const existingVectorStore = await getEmbeddings(url)
+
+  if (existingVectorStore) {
+    console.log("[extractContent] Already have embeddings for:", url)
+    return existingVectorStore
+  }
+
   const body = document.body
   const range = document.createRange()
   range.selectNodeContents(body)
@@ -32,12 +42,16 @@ export async function extractContent() {
   })
   const docs = await textSplitter.splitDocuments([doc])
 
+  console.log("[extractContent] calling openai embeddings")
   const embeddings = new OpenAIEmbeddings({
     apiKey: process.env.PLASMO_PUBLIC_OPENAI_API_KEY,
     model: "text-embedding-3-small"
   })
 
   const newVectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings)
+
+  // Guardar los nuevos embeddings
+  await saveEmbeddings(url, newVectorStore)
 
   return newVectorStore
 }
@@ -54,18 +68,15 @@ export async function answerQuestion(
   const prompt = await pull<ChatPromptTemplate>("rlm/rag-prompt")
 
   const llm = new ChatOpenAI({
-    // model: "gpt-4o-mini",
     model: configllm.model,
     temperature: 0,
     apiKey: configllm.apiKey,
-    maxTokens: 100, // Limitar la longitud de la respuesta
+    maxTokens: 100,
     configuration: {
       baseURL: configllm.baseURL || undefined
     }
   })
 
-  // const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-  // Retrieve and generate using the relevant snippets of the blog.
   const retriever = vectorStore.asRetriever()
   const ragChain = await createStuffDocumentsChain({
     llm,

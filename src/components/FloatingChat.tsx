@@ -30,6 +30,35 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
     baseURL: "",
     model: ""
   })
+  const [currentUrl, setCurrentUrl] = useState<string>("")
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href)
+  }, [])
+
+  useEffect(() => {
+    const loadExistingVectorStore = async () => {
+      if (currentUrl) {
+        setLoadingProcessDocument(true)
+        try {
+          const existingVectorStore = await extractContent()
+          if (existingVectorStore) {
+            setVectorStore(existingVectorStore)
+            console.log(
+              "[useEffect] Loaded existing vector store for:",
+              currentUrl
+            )
+          }
+        } catch (error) {
+          console.error("Error loading existing vector store:", error)
+        } finally {
+          setLoadingProcessDocument(false)
+        }
+      }
+    }
+
+    loadExistingVectorStore()
+  }, [currentUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,10 +100,9 @@ export default function ChatUI({ handleClose }: { handleClose: () => void }) {
     try {
       setLoadingProcessDocument(true)
       const newVectorStore = await extractContent()
-
       setVectorStore(newVectorStore)
     } catch (error) {
-      console.log("[processDocument] error", error)
+      console.error("[processDocument] error", error)
     } finally {
       setLoadingProcessDocument(false)
     }
