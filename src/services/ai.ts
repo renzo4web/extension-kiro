@@ -67,6 +67,7 @@ export async function extractContent() {
   const docs = await textSplitter.splitDocuments([doc])
 
   const embeddingModelConfig = await getEmbeddingModel()
+  console.log("[extractContent] calling openai embeddings")
   const embeddings = new OpenAIEmbeddings(embeddingModelConfig)
 
   const newVectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings)

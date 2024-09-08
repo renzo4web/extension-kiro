@@ -11,19 +11,27 @@ import { Button } from "~components/ui/button"
 import { Card, CardContent, CardHeader } from "~components/ui/card"
 import { Input } from "~components/ui/input"
 import { ScrollArea } from "~components/ui/scroll-area"
+import type { Message } from "~content"
 import { defaultConfigValues } from "~popup"
 import { answerQuestion, extractContent } from "~services/ai"
 
-interface Message {
-  role: "user" | "assistant"
-  content: string
+interface ChatUIProps {
+  handleClose: () => void
+  vectorStore: MemoryVectorStore | null
+  setVectorStore: (vectorStore: MemoryVectorStore | null) => void
+  messages: Message[]
+  setMessages: (messages: Message[]) => void
 }
 
-export default function ChatUI({ handleClose }: { handleClose: () => void }) {
+export default function ChatUI({
+  handleClose,
+  vectorStore,
+  setVectorStore,
+  messages,
+  setMessages
+}: ChatUIProps) {
   const [loadingResponse, setLoadingResponse] = useState(false)
   const [loadingProcessDocument, setLoadingProcessDocument] = useState(false)
-  const [vectorStore, setVectorStore] = useState<MemoryVectorStore | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const lastMessageRef = useRef<HTMLDivElement>(null)
   const [config] = useStorage("config", defaultConfigValues)

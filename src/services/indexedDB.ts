@@ -53,7 +53,7 @@ export async function getEmbeddings(
       if (request.result) {
         const { vectors } = request.result.vectorStore
         getEmbeddingModel().then((config) => {
-          console.log("[getEmbeddings] openai", config)
+          console.log("[getEmbeddings] calling openai embeddings")
           const vectorStore = new MemoryVectorStore(
             new OpenAIEmbeddings(config)
           )

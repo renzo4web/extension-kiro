@@ -7,6 +7,7 @@ import { useStorage } from "@plasmohq/storage/hook"
 import "~style.css"
 
 import cssText from "data-text:~style.css"
+import type { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { MessageCircle } from "lucide-react"
 
 import ChatUI from "~components/FloatingChat"
@@ -21,9 +22,16 @@ export const getStyle = () => {
   return style
 }
 
+export interface Message {
+  role: "user" | "assistant"
+  content: string
+}
+
 const FloatingChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [chatVisible] = useStorage("chatVisible", false)
+  const [vectorStore, setVectorStore] = useState<MemoryVectorStore | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
 
   const toggleChat = () => setIsOpen(!isOpen)
 
@@ -39,7 +47,13 @@ const FloatingChat: React.FC = () => {
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.3 }}
             className="fixed bottom-20 right-4 w-80 h-[500px] shadow-lg bg-white/80 backdrop-blur-md border border-gray-200 rounded-lg overflow-hidden">
-            <ChatUI handleClose={toggleChat} />
+            <ChatUI
+              handleClose={toggleChat}
+              vectorStore={vectorStore}
+              setVectorStore={setVectorStore}
+              messages={messages}
+              setMessages={setMessages}
+            />
           </motion.div>
         )}
       </AnimatePresence>
