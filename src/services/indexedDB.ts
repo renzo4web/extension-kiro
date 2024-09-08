@@ -66,3 +66,32 @@ export async function getEmbeddings(
     }
   })
 }
+
+export async function clearAllEmbeddings(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1)
+
+    request.onerror = () => {
+      console.error("Error opening database:", request.error)
+      reject(request.error)
+    }
+
+    request.onsuccess = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result
+      const transaction = db.transaction(STORE_NAME, "readwrite")
+      const store = transaction.objectStore(STORE_NAME)
+
+      const clearRequest = store.clear()
+
+      clearRequest.onerror = () => {
+        console.error("Error clearing embeddings store:", clearRequest.error)
+        reject(clearRequest.error)
+      }
+
+      clearRequest.onsuccess = () => {
+        console.log("Embeddings store cleared successfully")
+        resolve()
+      }
+    }
+  })
+}

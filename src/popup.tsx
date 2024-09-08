@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 
 import "~style.css"
 
-import { Eye, EyeOff, Save, Settings } from "lucide-react"
+import { Eye, EyeOff, Save, Settings, Trash2 } from "lucide-react"
 
 import { useStorage } from "@plasmohq/storage/hook"
 
@@ -18,6 +18,7 @@ import { Input } from "~components/ui/input"
 import { Label } from "~components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs"
 import defaultConfig from "~services/default-config"
+import { clearAllEmbeddings } from "~services/indexedDB"
 
 export interface Config {
   apiKey: string
@@ -61,6 +62,37 @@ const Popup: React.FC = () => {
 
   const toggleChat = () => {
     setChatVisible(!chatVisible)
+  }
+
+  const handleClearEmbeddings = async () => {
+    if (
+      confirm(
+        "Are you sure you want to clear all saved embeddings? This action cannot be undone."
+      )
+    ) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0]
+        if (activeTab.id) {
+          chrome.tabs.sendMessage(
+            activeTab.id,
+            { action: "clearEmbeddings" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  "Error sending message:",
+                  chrome.runtime.lastError
+                )
+                alert("Failed to clear embeddings. Please try again.")
+              } else if (response && response.success) {
+                alert("All embeddings have been cleared.")
+              } else {
+                alert("Failed to clear embeddings. Please try again.")
+              }
+            }
+          )
+        }
+      })
+    }
   }
 
   return (
@@ -181,6 +213,15 @@ const Popup: React.FC = () => {
                   value={configFormValues.embeddingApiKey}
                   onChange={handleInputChange}
                 />
+              </div>
+              <div className="space-y-2">
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={handleClearEmbeddings}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear All Embeddings
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion"
 import type { PlasmoCSConfig } from "plasmo"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import { useStorage } from "@plasmohq/storage/hook"
+
+import { clearAllEmbeddings } from "~services/indexedDB"
 
 import "~style.css"
 
@@ -13,7 +15,8 @@ import { MessageCircle } from "lucide-react"
 import ChatUI from "~components/FloatingChat"
 
 export const config: PlasmoCSConfig = {
-  matches: ["<all_urls>"]
+  matches: ["<all_urls>"],
+  all_frames: true
 }
 
 export const getStyle = () => {
@@ -34,6 +37,33 @@ const FloatingChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
 
   const toggleChat = () => setIsOpen(!isOpen)
+
+  useEffect(() => {
+    const messageListener = (
+      message: any,
+      sender: chrome.runtime.MessageSender,
+      sendResponse: (response?: any) => void
+    ) => {
+      if (message.action === "clearEmbeddings") {
+        clearAllEmbeddings()
+          .then(() => {
+            console.log("Embeddings cleared successfully")
+            sendResponse({ success: true })
+          })
+          .catch((error) => {
+            console.error("Error clearing embeddings:", error)
+            sendResponse({ success: false, error: error.message })
+          })
+        return true // Indicates that the response is sent asynchronously
+      }
+    }
+
+    chrome.runtime.onMessage.addListener(messageListener)
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener)
+    }
+  }, [])
 
   if (!chatVisible) return null
 
