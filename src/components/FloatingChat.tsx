@@ -83,7 +83,7 @@ export default function ChatUI({
     setError(null) // Limpiar error anterior
 
     try {
-      setMessages((messages: any) => [
+      setMessages((messages: Message[]) => [
         ...messages,
         { role: "user", content: question }
       ])
@@ -93,7 +93,7 @@ export default function ChatUI({
         baseURL: config.baseURL,
         model: config.model
       })
-      setMessages((messages: any) => [
+      setMessages((messages: Message[]) => [
         ...messages,
         { role: "assistant", content: answer }
       ])
@@ -167,17 +167,31 @@ export default function ChatUI({
         ))}
       </ScrollArea>
       <CardContent className="p-4 border-t border-gray-200">
-        <Button
-          onClick={processDocument}
-          className="w-full mb-4 bg-gray-100 text-gray-800 hover:bg-gray-200"
-          disabled={loadingProcessDocument}>
-          {loadingProcessDocument ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <FileText className="mr-2 h-4 w-4" />
-          )}
-          {loadingProcessDocument ? "Processing..." : "Process Page"}
-        </Button>
+        {!!vectorStore ? (
+          <Button
+            onClick={processDocument}
+            className="w-full mb-4 bg-gray-100 text-gray-800 hover:bg-gray-200"
+            disabled={loadingProcessDocument}>
+            {loadingProcessDocument ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            {loadingProcessDocument ? "Indexing..." : "Re-index Page"}
+          </Button>
+        ) : (
+          <Button
+            onClick={processDocument}
+            className="w-full mb-4 bg-gray-100 text-gray-800 hover:bg-gray-200"
+            disabled={loadingProcessDocument}>
+            {loadingProcessDocument ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            {loadingProcessDocument ? "Indexing..." : "Index Page"}
+          </Button>
+        )}
         <div className="flex ">
           <form onSubmit={handleSubmit} className="flex w-full space-x-2">
             <Input
