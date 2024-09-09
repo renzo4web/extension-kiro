@@ -126,6 +126,10 @@ export default function ChatUI({
     }
   }, [messages])
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+  }
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="p-4 border-b border-gray-200 flex   flex-row items-center justify-between">
@@ -206,6 +210,7 @@ export default function ChatUI({
                 loadingProcessDocument ||
                 loadingResponse
               }
+              onKeyDown={handleKeyDown}
             />
             <Button
               type="submit"

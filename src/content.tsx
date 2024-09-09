@@ -16,7 +16,7 @@ import ChatUI from "~components/FloatingChat"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
-  all_frames: true
+  all_frames: false
 }
 
 export const getStyle = () => {
