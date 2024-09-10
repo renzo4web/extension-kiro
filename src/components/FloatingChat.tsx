@@ -132,9 +132,9 @@ export default function ChatUI({
 
   return (
     <Card className="flex flex-col h-full">
-      <CardHeader className="p-4 border-b border-gray-200 flex   flex-row items-center justify-between">
+      <CardHeader className="p-4 border-b border-gray-200 flex flex-row items-center justify-between">
         <h2 className="text-md text-left self-end font-semibold  text-gray-800">
-          AI Assistant
+          Kiro AI Assistant ⚡
         </h2>
         <Button variant="outline" size="icon" onClick={handleClose}>
           <XCircleIcon className="h-4 w-4" />

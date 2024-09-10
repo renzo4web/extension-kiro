@@ -99,7 +99,7 @@ const Popup: React.FC = () => {
     <Card className="w-96 shadow-lg">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <CardTitle className="text-2xl font-bold text-center">
-          AI Article Assistant
+          Kiro AI Assistant ⚡
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
