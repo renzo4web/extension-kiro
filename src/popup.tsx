@@ -110,12 +110,12 @@ const Popup: React.FC = () => {
             {chatVisible ? (
               <>
                 <EyeOff className="w-4 h-4 mr-2" />
-                Ocultar Chat
+                Hide Chat
               </>
             ) : (
               <>
                 <Eye className="w-4 h-4 mr-2" />
-                Mostrar Chat
+                Show Chat
               </>
             )}
           </Button>
