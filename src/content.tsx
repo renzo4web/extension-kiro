@@ -30,7 +30,8 @@ export const config: PlasmoCSConfig = {
     "*://*.discord.com/*",
     "*://*.github.com/*",
     "*://*.stackoverflow.com/*",
-    "*://*.quora.com/*"
+    "*://*.quora.com/*",
+    "*://chatgpt.com/*"
     // Add more sites as needed
   ]
 }

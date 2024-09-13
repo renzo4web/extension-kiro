@@ -24,6 +24,7 @@ export interface Config {
   apiKey: string
   baseURL: string
   model: string
+  maxTokens: number // Add this line
   embeddingModel?: string
   embeddingEndpoint?: string
   embeddingApiKey?: string
@@ -33,6 +34,7 @@ export const defaultConfigValues: Config = {
   apiKey: "",
   baseURL: defaultConfig?.DEFAULT_API_ENDPOINT || "",
   model: defaultConfig?.DEFAULT_MODEL || "",
+  maxTokens: 100, // Add this line with the default value
   embeddingModel: defaultConfig?.DEFAULT_EMBEDDING_MODEL || "",
   embeddingEndpoint: defaultConfig?.DEFAULT_EMBEDDING_ENDPOINT || "",
   embeddingApiKey: defaultConfig?.DEFAULT_EMBEDDING_API_KEY || ""
@@ -166,6 +168,17 @@ const Popup: React.FC = () => {
                   placeholder="Nombre del modelo"
                   autoComplete="off"
                   value={configFormValues.model}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxTokens">Max Tokens</Label>
+                <Input
+                  id="maxTokens"
+                  name="maxTokens"
+                  placeholder="100"
+                  autoComplete="off"
+                  value={configFormValues.maxTokens}
                   onChange={handleInputChange}
                 />
               </div>

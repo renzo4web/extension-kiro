@@ -20,7 +20,7 @@ interface ChatUIProps {
   vectorStore: MemoryVectorStore | null
   setVectorStore: (vectorStore: MemoryVectorStore | null) => void
   messages: Message[]
-  setMessages: (messages: Message[]) => void
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 }
 
 export default function ChatUI({
@@ -83,15 +83,15 @@ export default function ChatUI({
     setError(null) // Limpiar error anterior
 
     try {
-      setMessages((messages: Message[]) => [
-        ...messages,
+      setMessages((prevMessages: Message[]) => [
+        ...prevMessages,
         { role: "user", content: question }
       ])
-      console.log("[handleSubmit] config", config)
       const answer = await answerQuestion(vectorStore, question, {
         apiKey: config.apiKey,
         baseURL: config.baseURL,
-        model: config.model
+        model: config.model,
+        maxTokens: config.maxTokens || 100 // Add this line, use default if not set
       })
       setMessages((messages: Message[]) => [
         ...messages,

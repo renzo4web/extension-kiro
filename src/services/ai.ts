@@ -85,6 +85,7 @@ export async function answerQuestion(
     apiKey: string
     baseURL: string
     model: string
+    maxTokens: number // Add this line
   }
 ) {
   const prompt = await pull<ChatPromptTemplate>("rlm/rag-prompt")
@@ -93,7 +94,7 @@ export async function answerQuestion(
     model: configllm.model,
     temperature: 0,
     apiKey: configllm.apiKey,
-    maxTokens: 100,
+    maxTokens: configllm.maxTokens, // Use the provided maxTokens
     configuration: {
       baseURL: configllm.baseURL || undefined
     }
@@ -112,8 +113,6 @@ export async function answerQuestion(
     instructions:
       "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise."
   })
-
-  console.log(response)
 
   return response
 }
