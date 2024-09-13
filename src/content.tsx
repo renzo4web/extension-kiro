@@ -10,7 +10,6 @@ import "~style.css"
 
 import cssText from "data-text:~style.css"
 import type { MemoryVectorStore } from "langchain/vectorstores/memory"
-import { Bot, BotMessageSquare } from "lucide-react"
 
 import ChatUI from "~components/FloatingChat"
 
@@ -105,15 +104,27 @@ const FloatingChat: React.FC = () => {
         )}
       </AnimatePresence>
       <motion.button
-        className="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-blue-500 text-white shadow-lg flex items-center justify-center hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gray-300 text-white shadow-lg flex items-center justify-center hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         onClick={toggleChat}
         whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}>
-        {isOpen ? (
-          <BotMessageSquare className="h-6 w-6" />
-        ) : (
-          <Bot className="h-6 w-6" />
-        )}
+        whileTap={{ scale: 0.9 }}
+        animate={isOpen ? { scale: 1.2 } : { scale: 1 }}
+        transition={{ duration: 0.3 }}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          fill="#0000"
+          className={`h-6 w-6 transition-transform ${isOpen ? "rotate-45" : ""}`}>
+          <path
+            stroke="currentColor"
+            fill="#0000"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            className="stroke-gray-800"
+            d="M5.75 10C10 10 10 5.75 10 5.75S10 10 14.25 10C10 10 10 14.25 10 14.25S10 5.75 5.75 10ZM4 1.75S4 4 1.75 4C4 4 4 6.25 4 6.25S4 4 6.25 4C4 4 4 1.75 4 1.75Z"
+          />
+        </svg>
       </motion.button>
     </>
   )
