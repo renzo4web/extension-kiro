@@ -2,7 +2,7 @@
 const { fontFamily } = require("tailwindcss/defaultTheme")
 module.exports = {
   content: ["./src/**/*.{tsx,html}"],
-  darkMode: "media",
+  darkMode: "noblock",
   theme: {
     container: {
       center: true,

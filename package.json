@@ -2,7 +2,7 @@
   "name": "kiro",
   "displayName": "Kiro",
   "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
+  "description": "A basic extension to chat with any website using LLMs",
   "author": "renzo@devpulse.xyz",
   "scripts": {
     "dev": "plasmo dev",
