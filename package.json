@@ -43,5 +43,14 @@
     "host_permissions": [
       "https://*/*"
     ]
+  },
+  "supportedArchitectures": {
+    "os": [
+      "darwin",
+      "current"
+    ],
+    "cpu": [
+      "arm64"
+    ]
   }
 }
