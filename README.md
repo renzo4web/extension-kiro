@@ -11,6 +11,10 @@ A powerful Chrome extension that allows you to chat with any website using Large
 - 🎨 Beautiful and intuitive UI
 - 🚀 Fast and efficient processing
 
+## Demo
+
+![Kiro AI Assistant Demo](assets/kiro-demo.gif)
+
 ## Installation 🛠️
 
 ### For Users
@@ -26,12 +30,13 @@ To build and run the extension locally:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/kiro.git
-cd kiro
+git clone https://github.com/renzo4web/extension-kiro
+cd extension-kiro
 ```
 I'll help you create a nice README in English (as per the rules) with emojis that explains your Chrome extension. I'll create it based on the project structure and functionality I can see.
 
 ```markdown:/Users/renzo/dev/kiro/README.md
+
 # Kiro AI Assistant ⚡
 
 A powerful Chrome extension that allows you to chat with any website using Large Language Models (LLMs). Kiro helps you understand and interact with web content more effectively through natural language conversations.
@@ -60,7 +65,7 @@ To build and run the extension locally:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/kiro.git
+git clone https://github.com/renzo4web/extension-kiro.git
 cd kiro
 ```
 
